@@ -9,17 +9,11 @@ module user_module_341452019534398035(
   output [7:0] io_out
 );
 
-  wire pdm_out;
-
-  assign io_out[0] = pdm_out;
-  assign io_out[1] = ~pdm_out;
-
-  pdm_341452019534398035 pdm_core(
-    .pdm_input(io_in[7:3]),
-    .write_en(io_in[2]),
-    .reset(io_in[1]),
-    .clk(io_in[0]),    
-    .pdm_out(pdm_out)
+  hello_341452019534398035 hello_core(
+    .clk(io_in[0]),
+    .dip_switch(io_in[7:1]),
+    .segments(io_out[6:0]),
+    .decimal(io_out[7])
   );
 
 endmodule
@@ -28,29 +22,37 @@ endmodule
 //  so they are copied into the main TinyTapeout repo.
 //  Appending your ID to any submodules you create 
 //  ensures there are no clashes in full-chip simulation.
-module pdm_341452019534398035(
-    input [4:0] pdm_input,
-    input       write_en,
-    input       clk, reset,    
-    output      pdm_out
+module hello_341452019534398035(
+  input clk,
+  input [6:0] dip_switch,
+  output [6:0] segments,
+  output decimal,
 );
 
-reg [4:0] accumulator;
-reg [4:0] input_reg;
+wire slow_clock;
+reg [15:0] clock_div;
+reg [2:0] state; 
+wire flash;
+wire [2:0]selected_state;
+reg [6:0] seg_output;
 
-wire [5:0] sum;
+always@(posedge clk)clock_div+=1;
+assign slow_clock = clock_div[dip_switch[3:0]];
+always@(posedge slow_clock)state+=1;
+assign selected_state = dip_switch[6]? state: dip_switch[2:0];
+assign flash = dip_switch[6]? dip_switch[3] : dip_switch[2:0];
+assign decimal = flash;
 
-assign sum = input_reg + accumulator;
-assign pdm_out = sum[5];
-
-always @(posedge clk or posedge reset) begin
-    if (reset) begin 
-        input_reg <= 5'h00 ;
-        accumulator <= 5'h00;
-    end else begin
-        accumulator <= sum[4:0];
-        if (write_en) input_reg <= pdm_input ;
-    end
+always@(selected_state)begin
+  case(selected_state)
+    0: seg_output= 7'b1110100; //H
+    1: seg_output= 7'b1111001; //E
+    2: seg_output= 7'b0111000; //L
+    3: seg_output= 7'b0111000; //L
+    4: seg_output= 7'b0111111; //O 
+    default: seg_output= 7'b0000000;  
+  endcase
 end
+assign segments = flash? seg_output: 7'b000000;
 
 endmodule
