@@ -34,25 +34,36 @@ reg [15:0] clock_div;
 reg [2:0] state; 
 wire flash;
 wire [2:0]selected_state;
-reg [6:0] seg_output;
+reg [6:0] hello_seg_output;
+reg [6:0] rpog_seg_output;
 
 always@(posedge clk)clock_div+=1;
 assign slow_clock = clock_div[dip_switch[3:0]];
 always@(posedge slow_clock)state+=1;
 assign selected_state = dip_switch[6]? state: dip_switch[2:0];
-assign flash = dip_switch[6]? dip_switch[3] : dip_switch[2:0];
+assign flash = (dip_switch[6]? dip_switch[3] : dip_switch[2:0])|dip_switch[4];
 assign decimal = flash;
 
 always@(selected_state)begin
   case(selected_state)
-    0: seg_output= 7'b1110100; //H
-    1: seg_output= 7'b1111001; //E
-    2: seg_output= 7'b0111000; //L
-    3: seg_output= 7'b0111000; //L
-    4: seg_output= 7'b0111111; //O 
-    default: seg_output= 7'b0000000;  
+    0: hello_seg_output= 7'b1110100; //H
+    1: hello_seg_output= 7'b1111001; //E
+    2: hello_seg_output= 7'b0111000; //L
+    3: hello_seg_output= 7'b0111000; //L
+    4: hello_seg_output= 7'b0111111; //O 
+    default: hello_seg_output= 7'b0000000;  
   endcase
 end
-assign segments = flash? seg_output: 7'b000000;
+
+always@(selected_state)begin
+  case(selected_state)
+    0: rpog_seg_output= 7'b1010000; //R
+    1: rpog_seg_output= 7'b1110011; //P
+    2: rpog_seg_output= 7'b0111111; //O
+    3: rpog_seg_output= 7'b1111101; //G 
+    default: rpog_seg_output= 7'b0000000;  
+  endcase
+end
+assign segments = flash?( dip_switch[5] ? rpog_seg_output : hello_seg_output): 7'b000000;
 
 endmodule
