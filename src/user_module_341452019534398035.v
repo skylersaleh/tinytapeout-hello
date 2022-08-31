@@ -26,7 +26,7 @@ module hello_341452019534398035(
   input clk,
   input [6:0] dip_switch,
   output [6:0] segments,
-  output decimal,
+  output decimal
 );
 
 wire slow_clock;
@@ -41,8 +41,13 @@ always@(posedge clk)clock_div+=1;
 assign slow_clock = clock_div[dip_switch[3:0]];
 always@(posedge slow_clock)state+=1;
 assign selected_state = dip_switch[6]? state: dip_switch[2:0];
-assign flash = (dip_switch[6]? dip_switch[3] : dip_switch[2:0])|dip_switch[4];
-assign decimal = flash;
+assign flash = (dip_switch[6]? slow_clock : dip_switch[3])|dip_switch[4];
+assign decimal = !flash;
+
+initial begin
+  clock_div = 0; 
+  state = 0;
+end
 
 always@(selected_state)begin
   case(selected_state)

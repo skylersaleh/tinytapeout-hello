@@ -1,15 +1,15 @@
 `timescale 1ns / 1ps
-//`include "user_module_341452019534398035.v"
+`include "user_module_341452019534398035.v"
 
 module user_module_341452019534398035_tb;
 
 wire [7:0] io_in;
 wire [7:0] io_out;
 
-reg clk, reset, write_en;
-reg [4:0] pdm_input;
-
-assign io_in = {pdm_input, write_en, reset, clk};
+reg clk;
+reg reset;
+reg [6:0] dip_switch;
+assign io_in = {dip_switch,clk};
 
 user_module_341452019534398035 UUT (.io_in(io_in), .io_out(io_out));
 
@@ -19,7 +19,7 @@ initial begin
 end
 
 initial begin
-   #100_000_000; // Wait a long time in simulation units (adjust as needed).
+   #100_100_000_000; // Wait a long time in simulation units (adjust as needed).
    $display("Caught by trap");
    $finish;
  end
@@ -42,6 +42,45 @@ begin
 end
 
 initial begin
+    dip_switch=0;
+
+    //Print Hello
+    dip_switch[6]=1;
+
+    #320 
+    //Print RPOG
+    dip_switch[5]=1;
+
+    #320
+    dip_switch=0;
+
+    //Print Hello
+    dip_switch[6]=1;
+    dip_switch[3:0]=1;
+
+    #640
+    dip_switch=0;
+
+    //Print Hello
+    dip_switch[6]=1;
+    dip_switch[3:0]=2;
+
+    #1280
+    dip_switch=0;
+
+    //Print Hello
+    dip_switch[6]=1;
+    dip_switch[3:0]=2;
+
+    #1280
+    dip_switch=0;
+
+    //Print Hello
+    dip_switch[6]=1;
+    dip_switch[3:0]=15;
+
+
+/*
     write_en = 0;
     pdm_input = 5'h00;
     #(CLK_HALF_PERIOD);
@@ -62,6 +101,7 @@ initial begin
     pdm_input= 5'h04;
     #(64*TCLK);
     $finish;
+    */
 end
 
 endmodule
